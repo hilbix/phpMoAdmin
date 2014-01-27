@@ -1,4 +1,4 @@
-i. Note:  This repository is a forked version of the original phpmoadmin version and gives the option of a CSV export.  Everything else remains the same.
+i. Note:  This repository is a forked version of the original "phpmoadmin":https://github.com/MongoDB-Rox/phpMoAdmin-MongoDB-Admin-Tool-for-PHP version and gives the option of a CSV export.  Everything else remains the same.
 
 h1. phpMoAdmin
 
