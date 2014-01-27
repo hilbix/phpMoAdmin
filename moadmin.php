@@ -1908,6 +1908,79 @@ class jsonHelper {
 }
 
 /**
+*The csvHelper class gives the script the necessary functions to properly format and output an export in CSV format
+*@link http://www.jeremyrperry.com
+*@author Jeremy Perry jeremyrperry@gmail.com
+*/
+class csvHelper{
+    /**
+    *The csvFormat function is able to convert a wrap a value with the necessary CSV attributes for a CSV export.
+    *@param string $theVal
+    *@param boolean $valPosition
+    *@return the value wrapped with the necessary CSV attributes.
+    */
+    public function csvFormat($theVal, $valPosition){
+        //Line terminator, separator, enclosed, and escaped variables are defined.
+        $csvTerminated = "\n";
+        $csvSeparator = ",";
+        $csvEnclosed = '"';
+        $csvEscaped = "\\";
+        //Ensures the value has all backslashes stripped
+        $valOutput = stripslashes(stripslashes($theVal));
+        //Properly escapes any pre-existing enclosure marks for the value.
+        $valOutput = str_replace($csvEnclosed, $csvEscaped . $csvEnclosed, $valOutput);
+        //Value gets the enclosure marks
+        $valOutput = $csvEnclosed . $valOutput . $csvEnclosed;
+        //A comman separation or line ending is added depending on the boolean value.
+        if(!$valPosition){
+            $valOutput .= $csvSeparator;
+        }
+        else{
+            $valOutput .= $csvTerminated;
+        }
+        return $valOutput;
+    }
+
+    /**
+    *The csvOutput function is able to convert an associatev array into CSV data.
+    *@param array $arr
+    *@return the converted CSV data ready for a file write or download.
+    */
+    public function csvOutput($arr){
+        $output = '';
+        $header = false;
+        foreach($arr as $row){
+            $arrCount = count($row);
+            //The header information is collected in the first go-around.
+            if(!$header){
+                $hCount = 1;
+                //Each heaver value is given the proper CSV conversion and added to the output.
+                foreach($row as $k=>$v){
+                    $last = false;
+                    if($hCount == $arrCount){
+                        $last = true;
+                    }
+                    $output .= $this->csvFormat($k, $last);
+                    $hCount++;
+                }
+                $header = true;
+            }
+            $count = 1;
+            //The column values in each row are given the proper CSV conversion and added to the output.
+            foreach($row as $k=>$v){
+                $last = false;
+                if($count == $arrCount){
+                    $last = true;
+                }
+                $output .= $this->csvFormat($v, $last);
+                $count++;
+            }
+        }
+        return $output;
+    }
+}
+
+/**
  * phpMoAdmin specific functionality
  */
 class phpMoAdmin {
@@ -1976,18 +2049,29 @@ $ver = explode('.', phpversion());
 get::$isPhp523orNewer = ($ver[0] >= 5 && ($ver[1] > 2 || ($ver[1] == 2 && $ver[2] >= 3)));
 $form = new formHelper;
 $mo = new moadminComponent;
+//CSV object added
+$csv = new csvHelper;
 
+//The export sequence was modified below to permit for a CSV export if needed.
 if (isset($_GET['export']) && isset($mo->mongo['listRows'])) {
-    $rows = array();
-    foreach ($mo->mongo['listRows'] as $row) {
-        $rows[] = serialize($row);
-    }
     $filename = get::htmlentities($_GET['db']);
     if (isset($_GET['collection'])) {
         $filename .= '~' . get::htmlentities($_GET['collection']);
     }
-    $filename .= '.json';
-    get::helper('json')->echoJson($rows, $filename);
+    if(isset($_GET['as_csv'])){
+        $output = $csv->csvOutput($mo->mongo['listRows']);
+        $filename .= '.csv';
+        header ('Content-Disposition: attachment; filename='.$filename .';') ;
+        echo $output;
+    }
+    else{
+        $rows = array();
+        foreach ($mo->mongo['listRows'] as $row) {
+            $rows[] = serialize($row);
+        }
+        $filename .= '.json';
+        get::helper('json')->echoJson($rows, $filename);
+    }
     exit(0);
 }
 
@@ -2334,13 +2418,29 @@ if (isset($mo->mongo['listRows'])) {
         echo '</ol>';
     }
 
-    echo '<ul id="export" style="display: none; margin-bottom: 10px;">';
+    echo '<div id="export" style="display: none; margin-bottom: 10px;"><ul>';
     echo $html->li($html->link(get::url(array('get' => true)) . '&export=nolimit',
                    'Export full results of this query (ignoring limit and skip clauses)'));
     echo $html->li($html->link(get::url(array('get' => true)) . '&export=limited',
                    'Export exactly the results visible on this page'));
-    echo '</ul>';
-
+     //CSV Export checkbox added.
+    echo '</ul><input type="checkbox" id="as_csv" />Export as CSV</div>';
+    //jQuery script for toggling the CSV export.
+    $asCsvJs = '$("#as_csv").click(function(){
+                    if($(this).is(":checked")){
+                        $("#export").find("a").each(function(){
+                            var newHref = jQuery(this).attr("href")+"&as_csv=true";
+                            $(this).attr("href", newHref);
+                        });
+                    }
+                    else{
+                        $("#export").find("a").each(function(){
+                            var newHref = $(this).attr("href").replace("&as_csv=true", "");
+                            $(this).attr("href", newHref);
+                        });
+                    }
+                });';
+    echo $html->jsInline($asCsvJs);
     echo '<div id="import" style="display: none; margin-bottom: 10px;">';
     echo $form->open(array('upload' => true));
     echo $form->file(array('name' => 'import'));
