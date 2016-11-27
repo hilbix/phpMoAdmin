@@ -142,19 +142,19 @@ class get {
                                        : htmlentities($string, $quoteStyle, $charset));
     }
 
-	/** 
-	 * Generates a HTML nested list from an array by recursive traversal.
-	 */
-	public function array_to_list($array){
-    	foreach( $array as $k => $v ){
-        	if( is_array( $v ) ){
-            	$out .= '<li>' . $k . ': <ul>' . self::array_to_list( $v ).'</ul></li>';
-        	} else {
-            	$out .= '<li>' . $k . ': ' . $v . '</li>';
-        	}
-    	}
-    	return $out;
-	}
+    /** 
+     * Generates a HTML nested list from an array by recursive traversal.
+     */
+    public function array_to_list($array) {
+        foreach ($array as $k => $v) {
+            if (is_array($v)) {
+                $out .= "<li>$k: <ul>" . self::array_to_list( $v ) . '</ul></li>';
+            } else {
+                $out .= "<li>$k: $v</li>";
+            }
+        }
+        return $out;
+    }
 
     /**
      * Initialize the character maps needed for the xhtmlentities() method and verifies the argument values
@@ -526,10 +526,10 @@ class moadminModel {
      * @param array $unique
      */
     public function ensureIndex($collection, array $indexes, array $unique) {
-	try {
-          $this->mongo->selectCollection($collection)->ensureIndex($indexes, $unique ? true : false);	/* Mongo <2 */
+        try {
+          $this->mongo->selectCollection($collection)->ensureIndex($indexes, $unique ? true : false); /* Mongo <2 */
         } catch (FatalErrorException $e) {
-          $this->mongo->selectCollection($collection)->ensureIndex($indexes, $unique);	/* Monto >=2 */
+          $this->mongo->selectCollection($collection)->ensureIndex($indexes, $unique);                /* Monto >=2 */
         }
     }
 
@@ -2236,9 +2236,9 @@ mo.confirm = function(dialog, func, title) {
     }
     mo.userFunc = func; //overcomes JS scope issues
     $("#confirm").html(dialog).attr("title", title).dialog({modal: true, buttons: {
-		"Yes": function() {$(this).dialog("close"); mo.userFunc();},
-		Cancel: function() {$(this).dialog("close");}
-	}}).dialog("open");
+            "Yes": function() {$(this).dialog("close"); mo.userFunc();},
+            Cancel: function() {$(this).dialog("close");}
+        }}).dialog("open");
 }
 ';
 echo $html->jsInline($js);
