@@ -3,11 +3,11 @@
  * phpMoAdmin - built on a stripped-down version of the high-performance Vork Enterprise Framework
  *
  * www.phpMoAdmin.com
- * www.Vork.us
  * www.MongoDB.org
  *
- * @version 1.1.3
+ * @version 1.1.3-git
  * @author Eric David Benari, Chief Architect, phpMoAdmin
+ * @author Valentin Hilbig <webmaster@scylla-charybdis.com>
  * @license GPL v3 - http://vork.us/go/mvz5
  */
 
