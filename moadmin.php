@@ -52,6 +52,13 @@ define('OBJECT_LIMIT', 100);
 define('DEBUG_MODE', false);
 
 /**
+ * WTF?  Make "catchable fatal errors" catchable as FatalErrorException
+ */
+class FatalErrorException extends ErrorException { }
+function fatal_exception_handler($nr, $str, $fil, $lin) { throw new FatalErrorException($str, 0, $nr, $fil, $lin); }
+set_error_handler("fatal_exception_handler", E_RECOVERABLE_ERROR);
+
+/**
  * Vork core-functionality tools
  */
 class get {
@@ -505,8 +512,11 @@ class moadminModel {
      * @param array $unique
      */
     public function ensureIndex($collection, array $indexes, array $unique) {
-        $unique = ($unique ? true : false); //signature requires a bool in both Mongo v. 1.0.1 and 1.2.0
-        $this->mongo->selectCollection($collection)->ensureIndex($indexes, $unique);
+	try {
+          $this->mongo->selectCollection($collection)->ensureIndex($indexes, $unique ? true : false);	/* Mongo <2 */
+        } catch (FatalErrorException $e) {
+          $this->mongo->selectCollection($collection)->ensureIndex($indexes, $unique);	/* Monto >=2 */
+        }
     }
 
     /**
